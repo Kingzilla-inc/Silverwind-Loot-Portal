@@ -1,238 +1,243 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Silverwind's Loot Ledger</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #16121c;
-    --bg-card: #221b2b;
-    --border: #3a2f45;
-    --gold: #c9a24b;
-    --gold-dim: #8a6f36;
-    --text: #ece5da;
-    --text-dim: #a89bb0;
-  }
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Vashalla Silverwind's Loot Ledger</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap"
+			rel="stylesheet" />
+		<style>
+			:root {
+				--bg: #16121c;
+				--bg-card: #221b2b;
+				--border: #3a2f45;
+				--gold: #c9a24b;
+				--gold-dim: #8a6f36;
+				--text: #ece5da;
+				--text-dim: #a89bb0;
+			}
 
-  * { box-sizing: border-box; }
+			* {
+				box-sizing: border-box;
+			}
 
-  body {
-    margin: 0;
-    min-height: 100vh;
-    background: radial-gradient(circle at top, #2a2035 0%, var(--bg) 60%);
-    color: var(--text);
-    font-family: "Spectral", "Georgia", serif;
-    padding: 2.5rem 1.5rem 4rem;
-  }
+			body {
+				margin: 0;
+				min-height: 100vh;
+				background: radial-gradient(circle at top, #2a2035 0%, var(--bg) 60%);
+				color: var(--text);
+				font-family: 'Spectral', 'Georgia', serif;
+				padding: 2.5rem 1.5rem 4rem;
+			}
 
-  header {
-    text-align: center;
-    margin-bottom: 2.5rem;
-  }
+			header {
+				text-align: center;
+				margin-bottom: 2.5rem;
+			}
 
-  header h1 {
-    font-family: "Cinzel", "Spectral", serif;
-    font-size: 2.3rem;
-    margin: 0;
-    color: var(--gold);
-    letter-spacing: 0.04em;
-    text-shadow: 0 0 12px rgba(201, 162, 75, 0.35);
-  }
+			header h1 {
+				font-family: 'Cinzel', 'Spectral', serif;
+				font-size: 2.3rem;
+				margin: 0;
+				color: var(--gold);
+				letter-spacing: 0.04em;
+				text-shadow: 0 0 12px rgba(201, 162, 75, 0.35);
+			}
 
-  header p {
-    color: var(--text-dim);
-    margin: 0.5rem 0 0;
-    font-size: 0.95rem;
-  }
+			header p {
+				color: var(--text-dim);
+				margin: 0.5rem 0 0;
+				font-size: 0.95rem;
+			}
 
-  .controls {
-    max-width: 900px;
-    margin: 0 auto 2rem;
-    display: flex;
-    justify-content: center;
-  }
+			.controls {
+				max-width: 900px;
+				margin: 0 auto 2rem;
+				display: flex;
+				justify-content: center;
+			}
 
-  #search {
-    width: 100%;
-    max-width: 360px;
-    padding: 0.6rem 1rem;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--bg-card);
-    color: var(--text);
-    font-size: 0.95rem;
-    outline: none;
-  }
+			#search {
+				width: 100%;
+				max-width: 360px;
+				padding: 0.6rem 1rem;
+				border-radius: 999px;
+				border: 1px solid var(--border);
+				background: var(--bg-card);
+				color: var(--text);
+				font-size: 0.95rem;
+				outline: none;
+			}
 
-  #search:focus {
-    border-color: var(--gold-dim);
-  }
+			#search:focus {
+				border-color: var(--gold-dim);
+			}
 
-  #status {
-    text-align: center;
-    color: var(--text-dim);
-    margin-bottom: 1.5rem;
-    min-height: 1.2em;
-  }
+			#status {
+				text-align: center;
+				color: var(--text-dim);
+				margin-bottom: 1.5rem;
+				min-height: 1.2em;
+			}
 
-  #status.error {
-    color: #e07a6b;
-  }
+			#status.error {
+				color: #e07a6b;
+			}
 
-  .grid {
-    max-width: 1100px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.25rem;
-  }
+			.grid {
+				max-width: 1100px;
+				margin: 0 auto;
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+				gap: 1.25rem;
+			}
 
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1.1rem 1.3rem 1.3rem;
-  }
+			.card {
+				background: var(--bg-card);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 1.1rem 1.3rem 1.3rem;
+			}
 
-  .card h2 {
-    font-family: "Cinzel", "Spectral", serif;
-    margin: 0 0 0.25rem;
-    font-size: 1.1rem;
-    color: var(--gold);
-  }
+			.card h2 {
+				font-family: 'Cinzel', 'Spectral', serif;
+				margin: 0 0 0.25rem;
+				font-size: 1.1rem;
+				color: var(--gold);
+			}
 
-  .card .count {
-    color: var(--text-dim);
-    font-size: 0.8rem;
-    margin-bottom: 0.9rem;
-  }
+			.card .count {
+				color: var(--text-dim);
+				font-size: 0.8rem;
+				margin-bottom: 0.9rem;
+			}
 
-  .item-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
+			.item-list {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+				gap: 0.4rem;
+			}
 
-  .item-list li {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.75rem;
-    font-size: 0.92rem;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid var(--border);
-  }
+			.item-list li {
+				display: flex;
+				justify-content: space-between;
+				gap: 0.75rem;
+				font-size: 0.92rem;
+				padding-bottom: 0.4rem;
+				border-bottom: 1px solid var(--border);
+			}
 
-  .item-list li:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
+			.item-list li:last-child {
+				border-bottom: none;
+				padding-bottom: 0;
+			}
 
-  .qty {
-    color: var(--gold-dim);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-  }
+			.qty {
+				color: var(--gold-dim);
+				font-variant-numeric: tabular-nums;
+				flex-shrink: 0;
+			}
 
-  .empty {
-    text-align: center;
-    color: var(--text-dim);
-    grid-column: 1 / -1;
-    padding: 2rem 0;
-  }
-</style>
-</head>
-<body>
+			.empty {
+				text-align: center;
+				color: var(--text-dim);
+				grid-column: 1 / -1;
+				padding: 2rem 0;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>Silverwind's Loot Ledger</h1>
+			<p>A record of treasures claimed by the party, one !loot at a time</p>
+		</header>
 
-<header>
-  <h1>Silverwind's Loot Ledger</h1>
-  <p>A record of treasures claimed by the party, one !loot at a time</p>
-</header>
+		<div class="controls">
+			<input id="search" type="text" placeholder="Search adventurer..." />
+		</div>
 
-<div class="controls">
-  <input id="search" type="text" placeholder="Search adventurer...">
-</div>
+		<div id="status"></div>
+		<div id="grid" class="grid"></div>
 
-<div id="status"></div>
-<div id="grid" class="grid"></div>
+		<script>
+			const statusEl = document.getElementById('status');
+			const gridEl = document.getElementById('grid');
+			const searchEl = document.getElementById('search');
 
-<script>
-  const statusEl = document.getElementById('status');
-  const gridEl = document.getElementById('grid');
-  const searchEl = document.getElementById('search');
+			let lootData = {};
 
-  let lootData = {};
+			function aggregate(items) {
+				const counts = new Map();
+				for (const item of items) {
+					counts.set(item, (counts.get(item) || 0) + 1);
+				}
+				return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+			}
 
-  function aggregate(items) {
-    const counts = new Map();
-    for (const item of items) {
-      counts.set(item, (counts.get(item) || 0) + 1);
-    }
-    return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }
+			function render(filter) {
+				const term = (filter || '').trim().toLowerCase();
+				const chatters = Object.keys(lootData)
+					.filter((name) => name.toLowerCase().includes(term))
+					.sort((a, b) => a.localeCompare(b));
 
-  function render(filter) {
-    const term = (filter || '').trim().toLowerCase();
-    const chatters = Object.keys(lootData)
-      .filter(name => name.toLowerCase().includes(term))
-      .sort((a, b) => a.localeCompare(b));
+				gridEl.innerHTML = '';
 
-    gridEl.innerHTML = '';
+				if (chatters.length === 0) {
+					gridEl.innerHTML = '<div class="empty">No adventurers found.</div>';
+					return;
+				}
 
-    if (chatters.length === 0) {
-      gridEl.innerHTML = '<div class="empty">No adventurers found.</div>';
-      return;
-    }
+				for (const chatter of chatters) {
+					const items = aggregate(lootData[chatter]);
+					const totalCount = lootData[chatter].length;
 
-    for (const chatter of chatters) {
-      const items = aggregate(lootData[chatter]);
-      const totalCount = lootData[chatter].length;
+					const card = document.createElement('div');
+					card.className = 'card';
 
-      const card = document.createElement('div');
-      card.className = 'card';
+					const list = items
+						.map(
+							([name, qty]) =>
+								`<li><span>${escapeHtml(name)}</span><span class="qty">${qty > 1 ? 'x' + qty : ''}</span></li>`,
+						)
+						.join('');
 
-      const list = items.map(([name, qty]) =>
-        `<li><span>${escapeHtml(name)}</span><span class="qty">${qty > 1 ? 'x' + qty : ''}</span></li>`
-      ).join('');
-
-      card.innerHTML = `
+					card.innerHTML = `
         <h2>${escapeHtml(chatter)}</h2>
         <div class="count">${totalCount} item${totalCount === 1 ? '' : 's'} claimed</div>
         <ul class="item-list">${list}</ul>
       `;
-      gridEl.appendChild(card);
-    }
-  }
+					gridEl.appendChild(card);
+				}
+			}
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
+			function escapeHtml(str) {
+				const div = document.createElement('div');
+				div.textContent = str;
+				return div.innerHTML;
+			}
 
-  searchEl.addEventListener('input', () => render(searchEl.value));
+			searchEl.addEventListener('input', () => render(searchEl.value));
 
-  fetch('loot.json', { cache: 'no-store' })
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      lootData = data;
-      statusEl.textContent = '';
-      render('');
-    })
-    .catch(err => {
-      statusEl.textContent = `Couldn't load loot.json (${err.message}). If you're opening this file directly, run a local server instead.`;
-      statusEl.classList.add('error');
-    });
-</script>
-
-</body>
+			fetch('loot.json', { cache: 'no-store' })
+				.then((res) => {
+					if (!res.ok) throw new Error(`HTTP ${res.status}`);
+					return res.json();
+				})
+				.then((data) => {
+					lootData = data;
+					statusEl.textContent = '';
+					render('');
+				})
+				.catch((err) => {
+					statusEl.textContent = `Couldn't load loot.json (${err.message}). If you're opening this file directly, run a local server instead.`;
+					statusEl.classList.add('error');
+				});
+		</script>
+	</body>
 </html>
