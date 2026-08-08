@@ -3,16 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Silverwind's Loot Log</title>
+<title>Silverwind's Loot Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Spectral:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0b1220;
-    --bg-card: #121b2e;
-    --border: #24314d;
-    --gold: #d9a441;
-    --gold-dim: #8a6a2f;
-    --text: #e8ecf4;
-    --text-dim: #8f9bb3;
+    --bg: #16121c;
+    --bg-card: #221b2b;
+    --border: #3a2f45;
+    --gold: #c9a24b;
+    --gold-dim: #8a6f36;
+    --text: #ece5da;
+    --text-dim: #a89bb0;
   }
 
   * { box-sizing: border-box; }
@@ -20,9 +23,9 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background: radial-gradient(circle at top, #142033 0%, var(--bg) 60%);
+    background: radial-gradient(circle at top, #2a2035 0%, var(--bg) 60%);
     color: var(--text);
-    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    font-family: "Spectral", "Georgia", serif;
     padding: 2.5rem 1.5rem 4rem;
   }
 
@@ -32,11 +35,12 @@
   }
 
   header h1 {
-    font-size: 2.2rem;
+    font-family: "Cinzel", "Spectral", serif;
+    font-size: 2.3rem;
     margin: 0;
     color: var(--gold);
-    letter-spacing: 0.03em;
-    text-shadow: 0 0 12px rgba(217, 164, 65, 0.35);
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 12px rgba(201, 162, 75, 0.35);
   }
 
   header p {
@@ -95,8 +99,9 @@
   }
 
   .card h2 {
+    font-family: "Cinzel", "Spectral", serif;
     margin: 0 0 0.25rem;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
     color: var(--gold);
   }
 
@@ -146,12 +151,12 @@
 <body>
 
 <header>
-  <h1>Silverwind's Loot Log</h1>
-  <p>Booty handed out on stream, tallied by chatter</p>
+  <h1>Silverwind's Loot Ledger</h1>
+  <p>A record of treasures claimed by the party, one !loot at a time</p>
 </header>
 
 <div class="controls">
-  <input id="search" type="text" placeholder="Search chatter...">
+  <input id="search" type="text" placeholder="Search adventurer...">
 </div>
 
 <div id="status"></div>
@@ -181,7 +186,7 @@
     gridEl.innerHTML = '';
 
     if (chatters.length === 0) {
-      gridEl.innerHTML = '<div class="empty">No chatters found.</div>';
+      gridEl.innerHTML = '<div class="empty">No adventurers found.</div>';
       return;
     }
 
@@ -198,7 +203,7 @@
 
       card.innerHTML = `
         <h2>${escapeHtml(chatter)}</h2>
-        <div class="count">${totalCount} item${totalCount === 1 ? '' : 's'} won</div>
+        <div class="count">${totalCount} item${totalCount === 1 ? '' : 's'} claimed</div>
         <ul class="item-list">${list}</ul>
       `;
       gridEl.appendChild(card);
