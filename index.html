@@ -102,6 +102,30 @@
 				padding: 1.1rem 1.3rem 1.3rem;
 			}
 
+			.featured-section {
+				max-width: 500px;
+				margin: 0 auto 2rem;
+			}
+
+			.card.featured {
+				border-color: var(--gold);
+				box-shadow: 0 0 16px rgba(201, 162, 75, 0.35);
+			}
+
+			.card .badge {
+				display: inline-block;
+				margin-left: 0.5rem;
+				padding: 0.1rem 0.5rem;
+				border-radius: 999px;
+				background: var(--gold);
+				color: var(--bg);
+				font-size: 0.65rem;
+				font-family: 'Spectral', serif;
+				font-weight: 600;
+				letter-spacing: 0.03em;
+				vertical-align: middle;
+			}
+
 			.card h2 {
 				font-family: 'Cinzel', 'Spectral', serif;
 				margin: 0 0 0.25rem;
@@ -163,14 +187,20 @@
 		</div>
 
 		<div id="status"></div>
+		<div id="featured" class="featured-section"></div>
 		<div id="grid" class="grid"></div>
 
 		<script>
 			const statusEl = document.getElementById('status');
+			const featuredEl = document.getElementById('featured');
 			const gridEl = document.getElementById('grid');
 			const searchEl = document.getElementById('search');
 
 			let lootData = {};
+
+			const featuredChatter = (new URLSearchParams(window.location.search).get('user') || '')
+				.trim()
+				.toLowerCase();
 
 			function aggregate(items) {
 				const counts = new Map();
@@ -180,10 +210,40 @@
 				return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 			}
 
+			function buildCard(chatter, isFeatured) {
+				const items = aggregate(lootData[chatter]);
+				const totalCount = lootData[chatter].length;
+
+				const card = document.createElement('div');
+				card.className = isFeatured ? 'card featured' : 'card';
+
+				const list = items
+					.map(
+						([name, qty]) =>
+							`<li><span>${escapeHtml(name)}</span><span class="qty">${qty > 1 ? 'x' + qty : ''}</span></li>`,
+					)
+					.join('');
+
+				card.innerHTML = `
+        <h2>${escapeHtml(chatter)}${isFeatured ? '<span class="badge">You</span>' : ''}</h2>
+        <div class="count">${totalCount} item${totalCount === 1 ? '' : 's'} claimed</div>
+        <ul class="item-list">${list}</ul>
+      `;
+				return card;
+			}
+
+			function renderFeatured() {
+				featuredEl.innerHTML = '';
+				const actualKey = Object.keys(lootData).find((name) => name.toLowerCase() === featuredChatter);
+				if (actualKey) {
+					featuredEl.appendChild(buildCard(actualKey, true));
+				}
+			}
+
 			function render(filter) {
 				const term = (filter || '').trim().toLowerCase();
 				const chatters = Object.keys(lootData)
-					.filter((name) => name.toLowerCase().includes(term))
+					.filter((name) => name.toLowerCase().includes(term) && name.toLowerCase() !== featuredChatter)
 					.sort((a, b) => lootData[b].length - lootData[a].length || a.localeCompare(b));
 
 				gridEl.innerHTML = '';
@@ -194,25 +254,7 @@
 				}
 
 				for (const chatter of chatters) {
-					const items = aggregate(lootData[chatter]);
-					const totalCount = lootData[chatter].length;
-
-					const card = document.createElement('div');
-					card.className = 'card';
-
-					const list = items
-						.map(
-							([name, qty]) =>
-								`<li><span>${escapeHtml(name)}</span><span class="qty">${qty > 1 ? 'x' + qty : ''}</span></li>`,
-						)
-						.join('');
-
-					card.innerHTML = `
-        <h2>${escapeHtml(chatter)}</h2>
-        <div class="count">${totalCount} item${totalCount === 1 ? '' : 's'} claimed</div>
-        <ul class="item-list">${list}</ul>
-      `;
-					gridEl.appendChild(card);
+					gridEl.appendChild(buildCard(chatter, false));
 				}
 			}
 
@@ -232,6 +274,7 @@
 				.then((data) => {
 					lootData = data;
 					statusEl.textContent = '';
+					renderFeatured();
 					render('');
 				})
 				.catch((err) => {
