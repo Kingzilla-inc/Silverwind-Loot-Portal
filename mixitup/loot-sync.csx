@@ -1,32 +1,12 @@
-// Mix It Up "C# Script" action - the MIDDLE of 3 actions on the !loot command:
-//   1. Web Request action (GET) - fetches loot.json from GitHub, extracts
-//      the sha and filecontent special identifiers (JSON field extraction, no script needed)
-//   2. THIS Script action - decodes filecontent, appends the new loot item,
-//      re-encodes to base64, returns it (stored in the scriptresult identifier)
-//   3. Web Request action (PUT) - pushes the updated content back to GitHub,
-//      using the scriptresult and sha identifiers in its request body
-// Paste this ENTIRE file's contents in place of Mix It Up's default script template
-// (the "CustomNamespace" / "CustomClass" / "Run()" skeleton it starts you with).
+// Mix It Up "Script" action for the !loot command. See SETUP.md for the full action list.
+// Paste this ENTIRE file in place of Mix It Up's default script template.
 //
-// IMPORTANT: Mix It Up substitutes special identifiers as a blind text replace across
-// the WHOLE script, including comments - not just inside string literals. Never write a
-// literal dollar-sign identifier name (like a real one of these, spelled out with the
-// leading symbol) anywhere in this file's comments, or a stale multi-line value from a
-// previous run will get spliced into the comment and corrupt the file. That's why this
-// comment block deliberately avoids writing any of them with their real prefix character.
+// Mix It Up substitutes special identifiers as a blind text replace across the whole
+// script, including comments - so never write a literal dollar-sign identifier name in a
+// comment here, or a stale value from a previous run will get spliced in and break the file.
 //
-// This deliberately does ZERO networking here - earlier attempts that tried to call
-// GitHub's API directly from this action kept hitting "type or namespace not found"
-// errors (HttpClient, System.Text.Json, then even WebClient) because Mix It Up's
-// script compiler only references a very small set of .NET assemblies, with no
-// networking or JSON libraries included. Convert/Encoding/string, used below, are
-// core types that don't require any extra assembly, so they're safe.
-//
-// The identifiers for target username, loot item, and filecontent get substituted with
-// plain text before this script compiles, the same way it already does in the Chat
-// Message and File Path fields on the other actions. That means item names in Loot.txt
-// must not contain a double-quote or backslash character, or the substituted text will
-// break the C# string literal below and the script will fail to compile.
+// Item names in Loot.txt must not contain a double-quote or backslash character, since
+// $loot gets substituted as raw text into a string literal below.
 
 using System;
 using System.Text;
@@ -39,12 +19,8 @@ namespace CustomNamespace
         {
             try
             {
-                // GitHub wraps base64 content at 60 chars with embedded newlines, and Mix It Up's
-                // JSON field extraction unescapes those into real newline/carriage-return bytes.
-                // A regular C# string literal can't legally contain a raw newline, so this MUST be
-                // a verbatim (@"...") string literal, or the script fails to compile as soon as
-                // the value below is substituted in. The .Replace calls still strip both real
-                // newlines and literal two-character backslash-n / backslash-r sequences, just in case.
+                // Must be a verbatim (@"...") string: the substituted content can contain
+                // real newlines, which a regular string literal can't contain.
                 string currentB64 = @"$filecontent"
                     .Replace("\\n", "").Replace("\\r", "")
                     .Replace("\n", "").Replace("\r", "")
@@ -76,8 +52,6 @@ namespace CustomNamespace
             return sb.ToString();
         }
 
-        // Pulls the raw (still-escaped) contents of every "..." string out of a JSON
-        // array's inner text, regardless of whether it's laid out on one line or many.
         private System.Collections.Generic.List<string> ExtractQuotedStrings(string content)
         {
             var result = new System.Collections.Generic.List<string>();
@@ -132,17 +106,14 @@ namespace CustomNamespace
                 int arrEnd = json.IndexOf(']', arrStart);
                 string arrContent = json.Substring(arrStart + 1, arrEnd - arrStart - 1);
 
-                // Rebuild the array from ALL its items (existing + new) rather than just
-                // appending to whatever text was already there. Our formatter (Prettier)
-                // decides single-line vs multi-line based on total line width each time it
-                // runs, not based on how the array was previously formatted, so we need to
-                // do the same or our output and Prettier's would keep fighting each other.
+                // Rebuild from all items (existing + new) and recompute single-line vs
+                // multi-line by width each time, matching how Prettier formats loot.json.
                 var items = ExtractQuotedStrings(arrContent);
                 items.Add(escapedItem);
 
                 string singleLine = "[" + string.Join(", ", items.ConvertAll(s => "\"" + s + "\"")) + "]";
                 string linePrefix = "    \"" + key + "\": ";
-                bool fits = (linePrefix.Length + singleLine.Length + 1) <= 80; // +1 for a trailing comma
+                bool fits = (linePrefix.Length + singleLine.Length + 1) <= 80;
 
                 string replacement;
                 if (fits)
