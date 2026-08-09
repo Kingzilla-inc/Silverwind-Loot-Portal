@@ -1,1 +1,3 @@
 
+# Real-credential local notes — never commit actual tokens
+mixitup/*.local.*
