@@ -1,34 +1,27 @@
-// Mix It Up "C# Script" action — add this as a 4th action on the !loot command,
-// after the existing "Read Random Line From File" and "Append To File" actions.
+// Mix It Up "C# Script" action — the MIDDLE of 3 actions on the !loot command:
+//   1. Web Request action (GET) — fetches loot.json from GitHub, extracts
+//      $sha and $filecontent (JSON field extraction, no script needed)
+//   2. THIS Script action — decodes $filecontent, appends the new loot item,
+//      re-encodes to base64, returns it (stored in $scriptresult)
+//   3. Web Request action (PUT) — pushes the updated content back to GitHub,
+//      using $scriptresult and $sha in its request body
 // Paste this ENTIRE file's contents in place of Mix It Up's default script template
-// (the "CustomNamespace" / "CustomClass" / "Run()" skeleton it starts you with) —
-// this keeps that exact required shape, just filled in.
+// (the "CustomNamespace" / "CustomClass" / "Run()" skeleton it starts you with).
 //
-// One-time setup before this will work:
-//   1. Create a GitHub fine-grained personal access token scoped to ONLY this repo,
-//      with "Contents: Read and write" permission.
-//      (GitHub -> Settings -> Developer settings -> Personal access tokens -> Fine-grained tokens)
-//   2. Paste that token into GITHUB_TOKEN below, in your LOCAL copy only — never commit
-//      a real token here. Keep this tracked file's token as the placeholder.
-//   3. Fill in REPO_OWNER with the GitHub username or org that owns the repo.
+// This deliberately does ZERO networking here — earlier attempts that tried to call
+// GitHub's API directly from this action kept hitting "type or namespace not found"
+// errors (HttpClient, System.Text.Json, then even WebClient) because Mix It Up's
+// script compiler only references a very small set of .NET assemblies, with no
+// networking or JSON libraries included. Convert/Encoding/string, used below, are
+// core types that don't require any extra assembly, so they're safe.
 //
-// Mix It Up compiles scripts as a real class via Roslyn's compiler API (not the
-// top-level-statements scripting API), and only references .NET's native namespaces —
-// no System.Net.Http, no System.Text.Json/Newtonsoft.Json. So this uses:
-//   - System.Net.WebClient instead of HttpClient
-//   - hand-rolled string-based JSON editing instead of a JSON library
-// loot.json's shape is simple and fully under our control (a flat object of
-// string -> array-of-strings, no nesting), so editing it with plain string
-// search/insert is safe and doesn't need a real parser.
-//
-// Mix It Up substitutes $targetusername and $loot with plain text before this script
-// compiles, the same way it already does in the Chat Message and File Path fields on
-// the other actions. That means item names in Loot.txt must not contain " or \
-// characters, or the substituted text will break the C# string literal below and the
-// script will fail to compile.
+// Mix It Up substitutes $targetusername, $loot, and $filecontent with plain text
+// before this script compiles, the same way it already does in the Chat Message and
+// File Path fields on the other actions. That means item names in Loot.txt must not
+// contain " or \ characters, or the substituted text will break the C# string literal
+// below and the script will fail to compile.
 
 using System;
-using System.Net;
 using System.Text;
 
 namespace CustomNamespace
@@ -37,72 +30,29 @@ namespace CustomNamespace
     {
         public object Run()
         {
-            string GITHUB_TOKEN = "PASTE_YOUR_FINE_GRAINED_TOKEN_HERE";
-            string REPO_OWNER = "Kingzilla-inc";
-            string REPO_NAME = "Silverwind-Loot-Portal";
-            string FILE_PATH = "loot.json";
-
-            string chatter = "$targetusername".TrimStart('@').Trim().ToLowerInvariant();
-            string newItem = "$loot".Trim();
-
-            string apiUrl = $"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}";
-
-            using (var client = new WebClient())
+            try
             {
-                client.Headers[HttpRequestHeader.Authorization] = "Bearer " + GITHUB_TOKEN;
-                client.Headers[HttpRequestHeader.UserAgent] = "MixItUp-LootBot";
-                client.Headers[HttpRequestHeader.Accept] = "application/vnd.github+json";
+                // GitHub wraps base64 content at 60 chars with embedded newlines. Depending on
+                // how Mix It Up's JSON field extraction handles the escaped "\n" in the source
+                // JSON, $filecontent may contain either literal backslash-n (two plain characters)
+                // or real newline/carriage-return bytes — strip both forms to be safe.
+                string currentB64 = "$filecontent"
+                    .Replace("\\n", "").Replace("\\r", "")
+                    .Replace("\n", "").Replace("\r", "")
+                    .Trim();
+                string currentJson = Encoding.UTF8.GetString(Convert.FromBase64String(currentB64));
 
-                // 1. Get the current file so we have its SHA (GitHub requires this to update
-                // a file) and its current contents.
-                string getBody;
-                try
-                {
-                    getBody = client.DownloadString(apiUrl);
-                }
-                catch (WebException ex)
-                {
-                    // LootBackpacks.txt already has the record even if this fails.
-                    return "GET failed: " + ex.Message;
-                }
+                string chatter = "$targetusername".TrimStart('@').Trim().ToLowerInvariant();
+                string newItem = "$loot".Trim();
 
-                string sha = ExtractJsonString(getBody, "sha");
-                string currentB64 = ExtractJsonString(getBody, "content");
-                string currentJson = Encoding.UTF8.GetString(Convert.FromBase64String(currentB64.Replace("\\n", "").Replace("\n", "")));
-
-                // 2. Add the new item, creating the chatter's entry if this is their first loot drop.
                 string updatedJson = AddLootItem(currentJson, chatter, newItem);
 
-                // 3. Push the updated file back to GitHub.
-                string updatedB64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(updatedJson));
-                string commitMessage = EscapeJson("Add loot for " + chatter + ": " + newItem);
-                string payload = "{\"message\":\"" + commitMessage + "\",\"content\":\"" + updatedB64 + "\",\"sha\":\"" + sha + "\"}";
-
-                client.Headers[HttpRequestHeader.ContentType] = "application/json";
-                try
-                {
-                    client.UploadString(apiUrl, "PUT", payload);
-                }
-                catch (WebException ex)
-                {
-                    // Same as above — LootBackpacks.txt already has the record even if this fails.
-                    return "PUT failed: " + ex.Message;
-                }
-
-                // No retry-on-conflict logic here: only the streamer runs !loot, so there's
-                // only ever one writer and no risk of two requests racing for the same file SHA.
-                return "OK: added '" + newItem + "' to " + chatter;
+                return Convert.ToBase64String(Encoding.UTF8.GetBytes(updatedJson));
             }
-        }
-
-        private string ExtractJsonString(string json, string key)
-        {
-            string marker = "\"" + key + "\"";
-            int keyIdx = json.IndexOf(marker);
-            int colonIdx = json.IndexOf(':', keyIdx + marker.Length);
-            int firstQuote = json.IndexOf('"', colonIdx + 1);
-            int secondQuote = json.IndexOf('"', firstQuote + 1);
-            return json.Substring(firstQuote + 1, secondQuote - firstQuote - 1);
+            catch (Exception ex)
+            {
+                return "ERROR: " + ex.Message;
+            }
         }
 
         private string EscapeJson(string s)
