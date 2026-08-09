@@ -184,7 +184,7 @@
 				const term = (filter || '').trim().toLowerCase();
 				const chatters = Object.keys(lootData)
 					.filter((name) => name.toLowerCase().includes(term))
-					.sort((a, b) => a.localeCompare(b));
+					.sort((a, b) => lootData[b].length - lootData[a].length || a.localeCompare(b));
 
 				gridEl.innerHTML = '';
 
