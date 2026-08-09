@@ -76,6 +76,35 @@ namespace CustomNamespace
             return sb.ToString();
         }
 
+        // Pulls the raw (still-escaped) contents of every "..." string out of a JSON
+        // array's inner text, regardless of whether it's laid out on one line or many.
+        private System.Collections.Generic.List<string> ExtractQuotedStrings(string content)
+        {
+            var result = new System.Collections.Generic.List<string>();
+            int i = 0;
+            while (i < content.Length)
+            {
+                if (content[i] == '"')
+                {
+                    int start = i + 1;
+                    int j = start;
+                    while (j < content.Length)
+                    {
+                        if (content[j] == '\\') { j += 2; continue; }
+                        if (content[j] == '"') break;
+                        j++;
+                    }
+                    result.Add(content.Substring(start, j - start));
+                    i = j + 1;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            return result;
+        }
+
         // Finds "key": [ ... ] and appends item to it, or adds a new "key": [item] entry
         // at the end of the object if the key doesn't exist yet.
         private string AddLootItem(string json, string key, string item)
@@ -102,15 +131,39 @@ namespace CustomNamespace
                 int arrStart = json.IndexOf('[', colonIdx);
                 int arrEnd = json.IndexOf(']', arrStart);
                 string arrContent = json.Substring(arrStart + 1, arrEnd - arrStart - 1);
-                bool hasExisting = arrContent.Trim().Length > 0;
 
-                // Insert right after the last item's closing quote (not right before "]"),
-                // so the bracket's own existing indentation/newline is left untouched.
-                int insertPos = arrStart + 1 + arrContent.TrimEnd().Length;
-                string sep = hasExisting ? ",\n        " : "\n        ";
-                string newText = sep + "\"" + escapedItem + "\"";
-                if (!hasExisting) newText += "\n    ";
-                return json.Substring(0, insertPos) + newText + json.Substring(insertPos);
+                // Rebuild the array from ALL its items (existing + new) rather than just
+                // appending to whatever text was already there. Our formatter (Prettier)
+                // decides single-line vs multi-line based on total line width each time it
+                // runs, not based on how the array was previously formatted, so we need to
+                // do the same or our output and Prettier's would keep fighting each other.
+                var items = ExtractQuotedStrings(arrContent);
+                items.Add(escapedItem);
+
+                string singleLine = "[" + string.Join(", ", items.ConvertAll(s => "\"" + s + "\"")) + "]";
+                string linePrefix = "    \"" + key + "\": ";
+                bool fits = (linePrefix.Length + singleLine.Length + 1) <= 80; // +1 for a trailing comma
+
+                string replacement;
+                if (fits)
+                {
+                    replacement = singleLine;
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+                    sb.Append("[\n");
+                    for (int k = 0; k < items.Count; k++)
+                    {
+                        sb.Append("        \"").Append(items[k]).Append("\"");
+                        if (k < items.Count - 1) sb.Append(",");
+                        sb.Append("\n");
+                    }
+                    sb.Append("    ]");
+                    replacement = sb.ToString();
+                }
+
+                return json.Substring(0, arrStart) + replacement + json.Substring(arrEnd + 1);
             }
             else
             {
@@ -118,7 +171,7 @@ namespace CustomNamespace
                 string beforeEnd = json.Substring(0, objEnd).TrimEnd();
                 bool isEmpty = beforeEnd.EndsWith("{");
                 string prefix = isEmpty ? "" : ",";
-                string insertion = prefix + "\n    \"" + EscapeJson(key) + "\": [\n        \"" + escapedItem + "\"\n    ]\n";
+                string insertion = prefix + "\n    \"" + EscapeJson(key) + "\": [\"" + escapedItem + "\"]\n";
                 return beforeEnd + insertion + json.Substring(objEnd);
             }
         }
