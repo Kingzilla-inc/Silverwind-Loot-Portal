@@ -1,3 +1,4 @@
 
 # Real-credential working copies — never commit actual tokens
 mixitup/*.local.csx
+mixitup/*.local.py
