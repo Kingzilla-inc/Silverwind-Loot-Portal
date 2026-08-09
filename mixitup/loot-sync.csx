@@ -77,7 +77,7 @@ namespace CustomNamespace
         }
 
         // Finds "key": [ ... ] and appends item to it, or adds a new "key": [item] entry
-        // at the top of the object if the key doesn't exist yet.
+        // at the end of the object if the key doesn't exist yet.
         private string AddLootItem(string json, string key, string item)
         {
             string quotedKey = "\"" + key + "\"";
@@ -101,17 +101,25 @@ namespace CustomNamespace
                 int colonIdx = json.IndexOf(':', keyIdx);
                 int arrStart = json.IndexOf('[', colonIdx);
                 int arrEnd = json.IndexOf(']', arrStart);
-                bool hasExisting = json.Substring(arrStart + 1, arrEnd - arrStart - 1).Trim().Length > 0;
-                string sep = hasExisting ? ",\n    " : "";
-                return json.Substring(0, arrEnd) + sep + "\"" + escapedItem + "\"" + json.Substring(arrEnd);
+                string arrContent = json.Substring(arrStart + 1, arrEnd - arrStart - 1);
+                bool hasExisting = arrContent.Trim().Length > 0;
+
+                // Insert right after the last item's closing quote (not right before "]"),
+                // so the bracket's own existing indentation/newline is left untouched.
+                int insertPos = arrStart + 1 + arrContent.TrimEnd().Length;
+                string sep = hasExisting ? ",\n        " : "\n        ";
+                string newText = sep + "\"" + escapedItem + "\"";
+                if (!hasExisting) newText += "\n    ";
+                return json.Substring(0, insertPos) + newText + json.Substring(insertPos);
             }
             else
             {
-                int objStart = json.IndexOf('{');
-                bool isEmpty = json.Substring(objStart + 1).TrimStart().StartsWith("}");
-                string trailer = isEmpty ? "" : ",";
-                string insertion = "\n  \"" + EscapeJson(key) + "\": [\"" + escapedItem + "\"]" + trailer;
-                return json.Substring(0, objStart + 1) + insertion + json.Substring(objStart + 1);
+                int objEnd = json.LastIndexOf('}');
+                string beforeEnd = json.Substring(0, objEnd).TrimEnd();
+                bool isEmpty = beforeEnd.EndsWith("{");
+                string prefix = isEmpty ? "" : ",";
+                string insertion = prefix + "\n    \"" + EscapeJson(key) + "\": [\n        \"" + escapedItem + "\"\n    ]\n";
+                return beforeEnd + insertion + json.Substring(objEnd);
             }
         }
     }
