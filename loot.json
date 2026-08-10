@@ -1159,7 +1159,11 @@
 	"silentstudy101": ["Prototype car freshener"],
 	"poeyplayz": ["Eleven-gallon oil hat"],
 	"vivvydarkchild": ["Professor Kalos' gardening pants", "Embarrassing whistle"],
-	"backgroundnpc42": ["Delicious oyster", "Government-issue necktie"],
+	"backgroundnpc42": [
+        "Delicious oyster",
+        "Government-issue necktie",
+        "Iced scone"
+    ],
 	"little_chomp": ["Single shoe", "Hamethyst earrings"],
 	"magiwastaken": ["Grubby doll head"],
     "vashallasilverwind": ["Ultracondensed soup", "Cola Wars MRE"],
