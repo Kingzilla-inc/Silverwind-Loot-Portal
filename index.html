@@ -4,6 +4,7 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Vashalla Silverwind's Loot Ledger</title>
+		<link rel="icon" type="image/png" href="assets/vashhappy-quiet_cropped.png" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -38,6 +39,16 @@
 				margin-bottom: 2.5rem;
 			}
 
+			header img.logo {
+				width: 120px;
+				height: 120px;
+				object-fit: cover;
+				border-radius: 50%;
+				border: 2px solid var(--gold-dim);
+				box-shadow: 0 0 20px rgba(201, 162, 75, 0.35);
+				margin-bottom: 1rem;
+			}
+
 			header h1 {
 				font-family: 'Cinzel', 'Spectral', serif;
 				font-size: 2.3rem;
@@ -51,6 +62,20 @@
 				color: var(--text-dim);
 				margin: 0.5rem 0 0;
 				font-size: 0.95rem;
+			}
+
+			header .twitch-link {
+				display: inline-block;
+				margin-top: 0.75rem;
+				color: var(--gold);
+				font-size: 0.85rem;
+				text-decoration: none;
+				border-bottom: 1px solid var(--gold-dim);
+				transition: color 0.15s ease;
+			}
+
+			header .twitch-link:hover {
+				color: var(--text);
 			}
 
 			.controls {
@@ -190,8 +215,12 @@
 	</head>
 	<body>
 		<header>
+			<img class="logo" src="assets/vashhappy-quiet_cropped.png" alt="Vashalla Silverwind" />
 			<h1>Vashalla Silverwind's Loot Ledger</h1>
 			<p>A record of treasures claimed by the party, one !loot at a time</p>
+			<a class="twitch-link" href="https://www.twitch.tv/vashallasilverwind" target="_blank" rel="noopener noreferrer">
+				twitch.tv/vashallasilverwind
+			</a>
 		</header>
 
 		<div class="controls">
@@ -246,7 +275,9 @@
 
 			function renderFeatured() {
 				featuredEl.innerHTML = '';
-				const actualKey = Object.keys(lootData).find((name) => name.toLowerCase() === featuredChatter);
+				const actualKey = Object.keys(lootData).find(
+					(name) => name.toLowerCase() === featuredChatter,
+				);
 				if (actualKey) {
 					featuredEl.appendChild(buildCard(actualKey, true));
 				}
@@ -255,7 +286,9 @@
 			function render(filter) {
 				const term = (filter || '').trim().toLowerCase();
 				const chatters = Object.keys(lootData)
-					.filter((name) => name.toLowerCase().includes(term) && name.toLowerCase() !== featuredChatter)
+					.filter(
+						(name) => name.toLowerCase().includes(term) && name.toLowerCase() !== featuredChatter,
+					)
 					.sort((a, b) => lootData[b].length - lootData[a].length || a.localeCompare(b));
 
 				gridEl.innerHTML = '';
