@@ -1186,7 +1186,11 @@
 	"g1michigan2023": ["Iron pumpernickel", "Sailor's cap"],
 	"silentstudy101": ["Prototype car freshener"],
 	"poeyplayz": ["Eleven-gallon oil hat"],
-	"vivvydarkchild": ["Professor Kalos' gardening pants", "Embarrassing whistle"],
+	"vivvydarkchild": [
+        "Professor Kalos' gardening pants",
+        "Embarrassing whistle",
+        "Greasy paper hat"
+    ],
 	"backgroundnpc42": [
         "Delicious oyster",
         "Government-issue necktie",
